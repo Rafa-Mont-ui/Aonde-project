@@ -1,3 +1,6 @@
+/** Attribution shown under a photo (required by licenses like CC BY-SA). */
+export type PhotoCredit = { text: string; url: string | null }
+
 export type AondeMuseum = {
   id: string
   name: string
@@ -6,7 +9,10 @@ export type AondeMuseum = {
   district: string
   description: string
   image: string
+  imageCredit: PhotoCredit | null
   gallery: string[]
+  /** Credits for `gallery`, in the same order. */
+  galleryCredits: (PhotoCredit | null)[]
   openingHours: string
   ticketInfo: string
   exhibitionInfo?: string | null

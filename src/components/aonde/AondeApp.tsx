@@ -524,6 +524,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   const current = museums[museum]
   // The details carousel only shows this museum's own cover and gallery.
   const photos = [current.image, ...current.gallery].filter(Boolean)
+  const photoCredits = [current.imageCredit, ...current.galleryCredits]
   const myRatings = current ? myReviews[current.id] : undefined
   const hasRated = Boolean(myRatings)
   const indexesOf = (ids: string[]) =>
@@ -1239,6 +1240,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   )
   const Hero = ({ details = false }: { details?: boolean }) => {
     const slideCount = details ? photos.length : homeList.length
+    const credit = details ? photoCredits[photo % photos.length] : current.imageCredit
     return (
     <section className="relative isolate mx-4 my-5">
       <div className="relative flex items-center">
@@ -1337,6 +1339,22 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           </IconButton>
         )}
       </div>
+      {credit && (
+        <p className="mt-1.5 px-3 text-right text-[.55em] leading-snug text-foreground/55">
+          {credit.url ? (
+            <a
+              href={credit.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-foreground/25 underline-offset-2 hover:text-foreground/80"
+            >
+              {credit.text}
+            </a>
+          ) : (
+            credit.text
+          )}
+        </p>
+      )}
     </section>
     )
   }

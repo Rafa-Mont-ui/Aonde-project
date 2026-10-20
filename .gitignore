@@ -26,3 +26,6 @@ logs/
 !.env.example
 /aonde.db*
 /media/
+
+# Vercel CLI project link
+.vercel

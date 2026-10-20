@@ -32,6 +32,25 @@ export const Media: CollectionConfig = {
       type: 'text',
       required: true,
     },
+    // Free licenses (e.g. CC BY-SA from Wikimedia Commons) require credit;
+    // the app shows it under the photo.
+    {
+      name: 'credit',
+      type: 'text',
+      label: 'Crédito da foto',
+      admin: {
+        description:
+          'Ex.: “Foto: Nome do autor / Wikimedia Commons, CC BY-SA 4.0”. Obrigatório para fotos com licença que exige atribuição.',
+      },
+    },
+    {
+      name: 'creditUrl',
+      type: 'text',
+      label: 'Link do crédito',
+      admin: {
+        description: 'Página de origem da foto (com autor e licença).',
+      },
+    },
     createFolderField({ relationTo: 'folders' }),
     createTagField({ relationTo: 'tags' }),
   ],

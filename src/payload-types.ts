@@ -314,6 +314,14 @@ export interface User {
 export interface Media {
   id: string;
   alt: string;
+  /**
+   * Ex.: “Foto: Nome do autor / Wikimedia Commons, CC BY-SA 4.0”. Obrigatório para fotos com licença que exige atribuição.
+   */
+  credit?: string | null;
+  /**
+   * Página de origem da foto (com autor e licença).
+   */
+  creditUrl?: string | null;
   _h_folders?: (string | null) | Folder;
   _h_tags?: (string | Tag)[] | null;
   prefix?: string | null;
@@ -809,6 +817,8 @@ export interface AdminsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  credit?: T;
+  creditUrl?: T;
   _h_folders?: T;
   _h_tags?: T;
   prefix?: T;
