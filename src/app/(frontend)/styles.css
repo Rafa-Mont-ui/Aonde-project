@@ -1,0 +1,189 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;450;500;600;700&display=swap");
+@import "tailwindcss";
+
+:root {
+  --brand-sage: #a9be79;
+  --brand-forest: #3c6543;
+  --brand-cream: #f8f2e4;
+  --brand-brown: #4c3430;
+  --brand-espresso: #150800;
+  --primary: var(--brand-forest);
+  --secondary: var(--brand-sage);
+  --background: var(--brand-cream);
+  --surface: #fffdf4b8;
+  --field: #fffdf7;
+  --text: var(--brand-brown);
+  --accent: var(--brand-forest);
+  --foreground: var(--text);
+  --border: #3c65432b;
+  --surface-highlight: #ffffff80;
+  --surface-shadow: #4c343010;
+}
+
+[data-theme="dark"] {
+  --primary: var(--brand-sage);
+  --secondary: #294633;
+  --background: #18231b;
+  --surface: #294030c9;
+  --field: #213327;
+  --text: var(--brand-cream);
+  --foreground: var(--text);
+  --accent: var(--brand-sage);
+  --border: #a9be7933;
+  --surface-highlight: #f8f2e412;
+  --surface-shadow: #00000024;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --font-sans: "Montserrat", sans-serif;
+  --font-serif: "Montserrat", sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background: #d9d6d0;
+  }
+  button,
+  a,
+  input {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button,
+  a {
+    cursor: pointer;
+  }
+  button {
+    transition:
+      background-color 0.2s,
+      transform 0.2s,
+      opacity 0.2s,
+      box-shadow 0.2s;
+  }
+  button:active {
+    transform: scale(0.96);
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  input {
+    min-width: 0;
+  }
+  [data-theme="dark"] .brand-logo {
+    filter: invert(1);
+  }
+}
+
+@utility glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 12px 28px var(--surface-shadow),
+    inset 0 1px 0 var(--surface-highlight),
+    inset 0 -1px 0 color-mix(in srgb, var(--border) 30%, transparent);
+}
+
+@utility canvas {
+  background:
+    radial-gradient(
+      ellipse at 95% 4%,
+      color-mix(in srgb, var(--secondary) 42%, transparent),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 0% 75%,
+      color-mix(in srgb, var(--accent) 6%, transparent),
+      transparent 60%
+    ),
+    var(--background);
+  transition:
+    background-color 0.4s,
+    color 0.4s;
+}
+
+@utility hide-scroll {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Museum markers on the Leaflet map (MapExplorer). */
+.aonde-pin {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--brand-cream);
+  border-radius: 9999px;
+  background: var(--brand-forest);
+  color: var(--brand-cream);
+  box-shadow: 0 6px 16px #15080040;
+}
+
+.aonde-pin svg {
+  width: 52%;
+  height: 52%;
+}
+
+.aonde-pin.is-selected {
+  background: var(--brand-brown);
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--brand-sage) 60%, transparent),
+    0 10px 22px #15080055;
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+
+.aonde-map .leaflet-tile-pane {
+  filter: saturate(0.35) sepia(0.12) brightness(1.04) contrast(0.92);
+}
+
+[data-theme="dark"] .aonde-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(0.3) brightness(0.85)
+    contrast(0.9);
+}
+
+.leaflet-control-attribution {
+  border-radius: 0 0 8px 0;
+  font-size: 9px;
+}
+
+.figma-custom-code-fragment {
+  display: contents;
+}
+
+.figma-bypass-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2147483647;
+  transform: translateY(-150%);
+}
+
+.figma-bypass-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  input,
+  .canvas {
+    transition: none;
+  }
+}

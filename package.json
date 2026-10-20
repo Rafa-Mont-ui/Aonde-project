@@ -1,0 +1,64 @@
+{
+  "dependencies": {
+    "@payloadcms/db-postgres": "4.0.0-beta.3",
+    "@payloadcms/db-sqlite": "4.0.0-beta.3",
+    "@payloadcms/next": "4.0.0-beta.3",
+    "@payloadcms/plugin-cloud-storage": "4.0.0-beta.3",
+    "@payloadcms/plugin-mcp": "4.0.0-beta.3",
+    "@payloadcms/richtext-lexical": "4.0.0-beta.3",
+    "@payloadcms/storage-vercel-blob": "4.0.0-beta.3",
+    "@payloadcms/translations": "4.0.0-beta.3",
+    "@payloadcms/ui": "4.0.0-beta.3",
+    "graphql": "^16.8.1",
+    "html-react-parser": "^5.2.10",
+    "leaflet": "1.9.4",
+    "lucide-react": "^1.59.0",
+    "monaco-editor": "0.55.1",
+    "motion": "^14.4.0",
+    "next": "16.4.0",
+    "payload": "4.0.0-beta.3",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "react-leaflet": "5.0.0",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/leaflet": "~1.9.22",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "cross-env": "10.1.0",
+    "oxfmt": "^0.2.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "pnpm": "^9 || ^10"
+  },
+  "name": "figma-make-app",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
+  },
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --port 3000",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation payload build",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "format": "oxfmt",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed.ts",
+    "vercel-build": "cross-env NODE_OPTIONS=--no-deprecation payload migrate && pnpm run build",
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create"
+  },
+  "type": "module",
+  "version": "0.0.0"
+}
