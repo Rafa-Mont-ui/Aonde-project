@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useTransition,
@@ -12,6 +13,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { AondeMuseum } from "@/types/aonde"
 import {
+  getMuseumStats,
   getSession,
   login,
   logout,
@@ -20,6 +22,7 @@ import {
   toggleFavorite,
   updateNickname,
   type AondeSession,
+  type MuseumStats,
   type SessionUser,
 } from "@/lib/aonde-actions"
 import {
@@ -56,6 +59,8 @@ import {
   Hand,
   AudioLines,
   Footprints,
+  UsersRound,
+  TrendingUp,
   Fingerprint,
   Armchair,
   type LucideIcon,
@@ -101,6 +106,24 @@ const accessibilityIcons: Record<string, LucideIcon> = {
 const types = ["Tipos", "Arte", "História", "Ciência", "Memória", "Outros"]
 type Screen = "welcome" | "signup" | "accessibility" | "login" | "verify" | "reset" | "home" | "map" | "results" | "search" | "details" | "reviews" | "rate" | "profile" | "saved"
 type NoticeTone = "success" | "error" | "info" | "warning"
+type HomeTab = "app" | "community" | "visited"
+const homeTabs: { id: HomeTab; label: string; hint: string }[] = [
+  {
+    id: "app",
+    label: "Recomendação do app",
+    hint: "Seleção da equipe Aondê",
+  },
+  {
+    id: "community",
+    label: "Recomendação dos usuários",
+    hint: "Os mais bem avaliados por quem visitou",
+  },
+  {
+    id: "visited",
+    label: "Mais visitados",
+    hint: "Com mais visitas registradas no Aondê",
+  },
+]
 
 const emptyRatings = [0, 0, 0, 0]
 const emptySession: AondeSession = {
@@ -401,7 +424,38 @@ function Field({
 }
 
 function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
-  const museums = initialMuseums
+  const [stats, setStats] = useState<MuseumStats>({})
+  // Static museum data plus live ratings and visits loaded after mount.
+  const museums = useMemo(
+    () => initialMuseums.map((item) => ({ ...item, ...stats[item.id] })),
+    [initialMuseums, stats],
+  )
+  const [homeTab, setHomeTab] = useState<HomeTab>("app")
+  // Museum indexes shown in the home carousel for each tab.
+  const listFor = useCallback(
+    (tab: HomeTab) => {
+      const all = museums.map((item, index) => ({ item, index }))
+      if (tab === "community")
+        return all
+          .filter(({ item }) => item.rating !== null)
+          .sort(
+            (a, b) =>
+              (b.item.rating ?? 0) - (a.item.rating ?? 0) ||
+              b.item.reviewCount - a.item.reviewCount,
+          )
+          .map(({ index }) => index)
+      if (tab === "visited")
+        return all
+          .filter(({ item }) => item.visits > 0)
+          .sort((a, b) => b.item.visits - a.item.visits)
+          .map(({ index }) => index)
+      // Until the team marks museums as recommended, show the whole catalog.
+      const featured = all.filter(({ item }) => item.featured)
+      return (featured.length ? featured : all).map(({ index }) => index)
+    },
+    [museums],
+  )
+  const homeList = useMemo(() => listFor(homeTab), [listFor, homeTab])
   const router = useRouter()
   const pathname = usePathname()
   const screen = (pathname.slice(1) || "welcome") as Screen
@@ -425,6 +479,12 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
     () => typeof window !== "undefined" && localStorage.getItem("museia-alt") === "true",
   )
   const [menu, setMenu] = useState(false)
+  // Pinterest-style: the top header slides away while scrolling down.
+  const [headerHidden, setHeaderHidden] = useState(false)
+  const lastScrollTop = useRef(0)
+  const headerLockedUntil = useRef(0)
+  const homeTabsRef = useRef<HTMLDivElement>(null)
+  const [homeTabsStuck, setHomeTabsStuck] = useState(false)
   const [filterSheet, setFilterSheet] = useState(false)
   const [notice, setNotice] = useState<{
     text: string
@@ -572,14 +632,22 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
     setPhoto(0)
     go("details", index)
   }
+  const selectHomeTab = (tab: HomeTab) => {
+    const list = listFor(tab)
+    setHomeTab(tab)
+    if (list.length) {
+      setSlideDirection(1)
+      setMuseum(list[0])
+    }
+  }
   const stepSlide = (step: number, details: boolean) => {
     setSlideDirection(step)
     if (details)
       setPhoto((previous) => (previous + step + photos.length) % photos.length)
-    else
-      setMuseum(
-        (previous) => (previous + step + museums.length) % museums.length,
-      )
+    else {
+      const position = Math.max(0, homeList.indexOf(museum))
+      setMuseum(homeList[(position + step + homeList.length) % homeList.length])
+    }
   }
   const toggleSaved = (index: number) => {
     const target = museums[index]
@@ -607,6 +675,8 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0)
     if (screen !== "map") setMapFocus(null)
+    setHeaderHidden(false)
+    lastScrollTop.current = 0
   }, [screen])
   useEffect(() => {
     if (!menu) return
@@ -661,6 +731,16 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   useEffect(() => {
     setPhoto(0)
   }, [museum])
+  useEffect(() => {
+    getMuseumStats()
+      .then(setStats)
+      .catch(() => undefined)
+  }, [])
+  useEffect(() => {
+    // Keep the home carousel on a museum that belongs to the selected tab.
+    if (screen === "home" && homeList.length && !homeList.includes(museum))
+      setMuseum(homeList[0])
+  }, [screen, homeList, museum])
   useEffect(() => {
     let active = true
     getSession()
@@ -1158,13 +1238,13 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
     </section>
   )
   const Hero = ({ details = false }: { details?: boolean }) => {
-    const slideCount = details ? photos.length : museums.length
+    const slideCount = details ? photos.length : homeList.length
     return (
     <section className="relative isolate mx-4 my-5">
       <div className="relative flex items-center">
         {slideCount > 1 && (
           <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-black/25 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md">
-            {details ? photo + 1 : museum + 1} de {slideCount}
+            {details ? photo + 1 : homeList.indexOf(museum) + 1} de {slideCount}
           </div>
         )}
         <IconButton
@@ -1220,8 +1300,18 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                     </span>
                   )}
                   <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 normal-case tracking-normal backdrop-blur-md">
-                    <Star size={11} fill="currentColor" />
-                    {current.rating === null ? "Novo" : ratingText}
+                    {!details && homeTab === "visited" ? (
+                      <>
+                        <Footprints size={11} />
+                        {current.visits}{" "}
+                        {current.visits === 1 ? "visita" : "visitas"}
+                      </>
+                    ) : (
+                      <>
+                        <Star size={11} fill="currentColor" />
+                        {current.rating === null ? "Novo" : ratingText}
+                      </>
+                    )}
                   </span>
                 </span>
               </div>
@@ -1276,7 +1366,23 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
         style={{ fontSize: `${size}px` }}
         className="canvas relative flex h-[844px] max-h-dvh w-[390px] max-w-full flex-col overflow-hidden text-foreground shadow-[0_24px_100px_#302a2420] sm:rounded-[40px]"
       >
-        {hasHeader && Header()}
+        {hasHeader && (
+          <motion.div
+            initial={false}
+            animate={{
+              marginTop: headerHidden ? -104 : 0,
+              opacity: headerHidden ? 0 : 1,
+            }}
+            transition={{
+              duration: reducedMotion ? 0 : 0.28,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            inert={headerHidden}
+            className="relative z-20 shrink-0"
+          >
+            {Header()}
+          </motion.div>
+        )}
         {!hasHeader && !["welcome", "profile"].includes(screen) && Close()}
         <motion.div
           key={screen}
@@ -1289,7 +1395,32 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           onScroll={(event) => {
-            scrollPositions.current[screen] = event.currentTarget.scrollTop
+            const top = event.currentTarget.scrollTop
+            scrollPositions.current[screen] = top
+            // Background behind the home tabs only once they stick to the top:
+            // the marker right above them has scrolled past the container top.
+            const marker = homeTabsRef.current
+            if (marker)
+              setHomeTabsStuck(
+                marker.getBoundingClientRect().top <=
+                  event.currentTarget.getBoundingClientRect().top + 1,
+              )
+            if (!hasHeader) return
+            const delta = top - lastScrollTop.current
+            lastScrollTop.current = top
+            // Hiding the header resizes this container, which fires its own
+            // scroll events; ignore them briefly so the header doesn't bounce.
+            if (performance.now() < headerLockedUntil.current) return
+            const hide =
+              top > 120 && delta > 4
+                ? true
+                : delta < -4 || top < 40
+                  ? false
+                  : headerHidden
+            if (hide !== headerHidden) {
+              setHeaderHidden(hide)
+              headerLockedUntil.current = performance.now() + 320
+            }
           }}
           className={`hide-scroll min-h-0 flex-1 ${
             // The map screen manages its own layout (map + draggable sheet).
@@ -1642,8 +1773,111 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   Encontre arquitetura, memória e novas histórias perto de você.
                 </BodyText>
               </section>
-              {SearchBar({})}
-              {Hero({})}
+              {/* Sticks to the top once the header slides away (see onScroll). */}
+              <div ref={homeTabsRef} aria-hidden="true" className="h-0" />
+              <div
+                className={`sticky top-0 z-10 transition-[background-color,box-shadow] duration-200 ${
+                  homeTabsStuck
+                    ? "bg-background/95 shadow-[0_6px_16px_#4c343014] backdrop-blur-md"
+                    : ""
+                }`}
+              >
+                <nav
+                  aria-label="Destaques"
+                  className="hide-scroll relative flex gap-1 overflow-x-auto px-3 pb-1.5 pt-3"
+                >
+                  {homeTabs.map(({ id, label }) => (
+                    <button
+                      key={id}
+                      aria-pressed={homeTab === id}
+                      onClick={(event) => {
+                        // Switching tabs scrolls the page by itself (new list
+                        // height, repositioning below). Only a real scroll up
+                        // may bring the header back, so freeze it briefly.
+                        headerLockedUntil.current = performance.now() + 700
+                        selectHomeTab(id)
+
+                        // Bring the tab into view horizontally only;
+                        // scrollIntoView would also move the page vertically.
+                        const button = event.currentTarget
+                        const nav = button.parentElement!
+                        const behavior = reducedMotion ? "instant" : "smooth"
+                        const left = button.offsetLeft
+                        const right = left + button.offsetWidth
+                        if (left < nav.scrollLeft)
+                          nav.scrollTo({ left: left - 12, behavior })
+                        else if (right > nav.scrollLeft + nav.clientWidth)
+                          nav.scrollTo({ left: right - nav.clientWidth + 12, behavior })
+
+                        // With the tabs stuck at the top, start the new list
+                        // right below them, like Pinterest does.
+                        const container = scrollRef.current
+                        const marker = homeTabsRef.current
+                        if (container && marker && homeTabsStuck)
+                          container.scrollTo({
+                            top:
+                              container.scrollTop +
+                              marker.getBoundingClientRect().top -
+                              container.getBoundingClientRect().top,
+                            behavior: "instant",
+                          })
+                      }}
+                      // Inner padding gives the focus ring room around the
+                      // label and the underline.
+                      className={`relative shrink-0 whitespace-nowrap rounded-xl px-2.5 pb-3.5 pt-2 text-[.9em] font-semibold transition-colors focus-visible:outline-offset-0 ${
+                        homeTab === id
+                          ? "text-foreground"
+                          : "text-foreground/50 hover:text-foreground/75"
+                      }`}
+                    >
+                      {label}
+                      {homeTab === id && (
+                        <motion.span
+                          layoutId="home-tab"
+                          transition={
+                            reducedMotion
+                              ? { duration: 0 }
+                              : { type: "spring", stiffness: 420, damping: 34 }
+                          }
+                          className="absolute inset-x-2.5 bottom-1.5 h-[3px] rounded-full bg-foreground"
+                        />
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              <Caption className="mx-6 mt-4 block" aria-live="polite">
+                {homeTabs.find((tab) => tab.id === homeTab)?.hint}
+              </Caption>
+              {homeList.length ? (
+                Hero({})
+              ) : (
+                <div className="glass mx-4 my-5 flex flex-col items-center rounded-[2rem] px-6 py-9 text-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/45 text-accent">
+                    {homeTab === "community" ? (
+                      <UsersRound size={22} strokeWidth={1.6} />
+                    ) : (
+                      <TrendingUp size={22} strokeWidth={1.6} />
+                    )}
+                  </span>
+                  <CardTitle className="mt-4">
+                    {homeTab === "community"
+                      ? "Ainda não há avaliações publicadas"
+                      : "Ainda não há visitas registradas"}
+                  </CardTitle>
+                  <BodyText className="mt-1.5 max-w-[260px]">
+                    {homeTab === "community"
+                      ? "Quando a comunidade avaliar os museus, os mais bem avaliados aparecem aqui."
+                      : "Quando as pessoas registrarem visitas, os museus mais visitados aparecem aqui."}
+                  </BodyText>
+                  <button
+                    onClick={() => selectHomeTab("app")}
+                    className="mt-5 min-h-11 rounded-2xl bg-primary px-5 text-[.72em] font-semibold text-background"
+                  >
+                    Ver recomendações do app
+                  </button>
+                </div>
+              )}
               <section className="px-5 pb-8 pt-1">
                 <div className="mb-3">
                   <Eyebrow>Exploração rápida</Eyebrow>

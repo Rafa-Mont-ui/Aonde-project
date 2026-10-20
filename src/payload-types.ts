@@ -456,6 +456,10 @@ export interface Post {
 export interface Museum {
   id: string;
   name: string;
+  /**
+   * Aparece na aba “Recomendação do app” da tela inicial.
+   */
+  featured?: boolean | null;
   slug: string;
   type: 'Arte' | 'História' | 'Ciência' | 'Memória' | 'Outros';
   district:
@@ -910,6 +914,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MuseumsSelect<T extends boolean = true> {
   name?: T;
+  featured?: T;
   slug?: T;
   type?: T;
   district?: T;

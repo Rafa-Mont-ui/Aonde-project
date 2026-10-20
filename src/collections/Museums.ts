@@ -31,6 +31,16 @@ export const Museums: CollectionConfig = {
   },
   fields: [
     { name: "name", type: "text", required: true },
+    {
+      name: "featured",
+      type: "checkbox",
+      label: "Recomendado pelo Aondê",
+      defaultValue: false,
+      admin: {
+        position: "sidebar",
+        description: "Aparece na aba “Recomendação do app” da tela inicial.",
+      },
+    },
     { name: "slug", type: "text", required: true, unique: true, index: true },
     {
       name: "type",

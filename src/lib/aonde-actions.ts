@@ -140,6 +140,54 @@ export async function getSession(): Promise<AondeSession> {
   return user ? loadSession(payload, user) : emptySession
 }
 
+export type MuseumStats = Record<
+  string,
+  { rating: number | null; reviewCount: number; visits: number }
+>
+
+/** Per-museum rating (approved reviews only) and visit totals. */
+export async function getMuseumStats(): Promise<MuseumStats> {
+  const payload = await getPayloadClient()
+  const [reviews, visits] = await Promise.all([
+    // Public read access already limits anonymous queries to approved reviews.
+    payload.find({
+      collection: "reviews",
+      where: { status: { equals: "approved" } },
+      select: { museum: true, ratings: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: false,
+    }),
+    // Visits are private to each user, so this reads them all on the server
+    // and only per-museum totals leave it.
+    payload.find({
+      collection: "visits",
+      select: { museum: true },
+      depth: 0,
+      pagination: false,
+      overrideAccess: true,
+    }),
+  ])
+
+  const stats: MuseumStats = {}
+  const entry = (id: string) =>
+    (stats[id] ??= { rating: null, reviewCount: 0, visits: 0 })
+  const totals: Record<string, number> = {}
+
+  for (const review of reviews.docs) {
+    const id = relationID(review.museum)
+    const { collection, accessibility, structure, service } = review.ratings
+    totals[id] = (totals[id] ?? 0) + (collection + accessibility + structure + service) / 4
+    entry(id).reviewCount += 1
+  }
+  for (const [id, total] of Object.entries(totals)) {
+    entry(id).rating = Math.round((total / stats[id].reviewCount) * 10) / 10
+  }
+  for (const visit of visits.docs) entry(relationID(visit.museum)).visits += 1
+
+  return stats
+}
+
 async function startSession(
   payload: Payload,
   email: string,

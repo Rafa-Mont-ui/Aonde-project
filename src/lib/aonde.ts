@@ -37,8 +37,12 @@ export async function getAondeMuseums(): Promise<AondeMuseum[]> {
     address: museum.address,
     website: museum.website,
     instagram: museum.instagram,
+    // Ratings and visits change often, so the client loads them with
+    // getMuseumStats() instead of baking them into the static pages.
     rating: null,
     reviewCount: 0,
+    visits: 0,
+    featured: Boolean(museum.featured),
     latitude: museum.latitude ?? null,
     longitude: museum.longitude ?? null,
     accessibility: museum.accessibilityFeatures ?? [],
