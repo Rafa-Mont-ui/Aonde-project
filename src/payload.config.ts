@@ -22,14 +22,27 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 if (!process.env.PAYLOAD_SECRET) {
-  throw new Error('PAYLOAD_SECRET is missing. Copy .env.example to .env and set it.')
+  throw new Error(
+    process.env.VERCEL
+      ? 'PAYLOAD_SECRET is missing. Add it in Vercel: Settings → Environment Variables.'
+      : 'PAYLOAD_SECRET is missing. Copy .env.example to .env and set it.',
+  )
 }
 
 // Production (Vercel) uses Postgres from the Neon integration; local
 // development can keep using a SQLite file. Migrations in src/migrations are
 // Postgres-only — SQLite pushes its schema automatically in development.
-const databaseUrl = process.env.DATABASE_URL || 'file:./aonde.db'
+const databaseUrl =
+  process.env.DATABASE_URL || process.env.POSTGRES_URL || 'file:./aonde.db'
 const usePostgres = /^postgres(ql)?:\/\//.test(databaseUrl)
+
+// Vercel's filesystem is temporary: a SQLite file there would lose every
+// signup, review and favorite. Fail the build with a clear message instead.
+if (process.env.VERCEL && !usePostgres) {
+  throw new Error(
+    'DATABASE_URL (Postgres) is missing. In Vercel, open Storage, create a Neon database and connect it to this project.',
+  )
+}
 
 export default buildConfig({
   admin: {

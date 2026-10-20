@@ -35,7 +35,7 @@
     "typescript": "^5.7.0"
   },
   "engines": {
-    "node": ">=20.9.0",
+    "node": "24.x",
     "pnpm": "^9 || ^10"
   },
   "name": "figma-make-app",
@@ -60,5 +60,6 @@
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create"
   },
   "type": "module",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.34.3"
 }
