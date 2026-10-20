@@ -1,5 +1,5 @@
 import React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import Script from "next/script"
 import { BodyCustomCode, renderHeadCustomCode } from "@/lib/make-custom-code"
 import {
@@ -43,6 +43,12 @@ export const metadata: Metadata = {
     : undefined,
 }
 
+// Draw under the phone's gesture bar; the app pads its bottom edge with
+// env(safe-area-inset-bottom) so nothing ends up behind it.
+export const viewport: Viewport = {
+  viewportFit: "cover",
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -58,7 +64,7 @@ export default function RootLayout({
         {renderHeadCustomCode(customScripts?.headStart, "head-start")}
         {renderHeadCustomCode(customScripts?.headEnd, "head-end")}
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="min-h-dvh bg-background text-foreground antialiased">
         <BodyCustomCode html={customScripts?.bodyStart} />
         {addBypassLinks && (
           <a className="figma-bypass-link" href="#root">

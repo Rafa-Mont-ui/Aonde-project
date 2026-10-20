@@ -882,7 +882,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
     return (
       <nav
         aria-label="Navegação principal"
-        className="absolute inset-x-0 bottom-0 z-30 flex h-[91px] items-start justify-around rounded-t-[50%_24px] border-t border-border bg-secondary/95 px-8 pt-4 backdrop-blur-xl"
+        className="absolute inset-x-0 bottom-0 z-30 flex h-[calc(91px_+_env(safe-area-inset-bottom))] items-start justify-around rounded-t-[50%_24px] border-t border-border bg-secondary/95 px-8 pt-4 backdrop-blur-xl"
       >
         {order.map((tab) => {
           const Icon =
@@ -1362,7 +1362,9 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   const hasHeader = ["home", "map", "results"].includes(screen)
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#d9d6d0] p-0 sm:p-7">
+    // Phones: the app fills the visible screen and the page itself never
+    // scrolls. Larger screens: a phone-sized frame centered on the page.
+    <main className="flex h-dvh items-center justify-center overflow-hidden bg-[#d9d6d0] sm:h-auto sm:min-h-dvh sm:overflow-visible sm:p-7">
       <div
         data-theme={dark ? "dark" : "light"}
         onPointerDownCapture={event => {
@@ -1382,7 +1384,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           event.stopPropagation()
         }}
         style={{ fontSize: `${size}px` }}
-        className="canvas relative flex h-[844px] max-h-dvh w-[390px] max-w-full flex-col overflow-hidden text-foreground shadow-[0_24px_100px_#302a2420] sm:rounded-[40px]"
+        className="canvas relative flex h-full w-full flex-col sm:h-[844px] sm:max-h-[calc(100dvh_-_3.5rem)] sm:w-[390px] overflow-hidden text-foreground shadow-[0_24px_100px_#302a2420] sm:rounded-[40px]"
       >
         {hasHeader && (
           <motion.div
@@ -1443,8 +1445,14 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           className={`hide-scroll min-h-0 flex-1 ${
             // The map screen manages its own layout (map + draggable sheet).
             screen === "map"
-              ? "overflow-hidden"
-              : `overflow-y-auto ${hasBottom ? "pb-28" : screen === "welcome" ? "" : "pb-8"}`
+              ? "overflow-hidden pb-[env(safe-area-inset-bottom)]"
+              : `overflow-y-auto ${
+                  hasBottom
+                    ? "pb-[calc(7rem_+_env(safe-area-inset-bottom))]"
+                    : screen === "welcome"
+                      ? ""
+                      : "pb-[calc(2rem_+_env(safe-area-inset-bottom))]"
+                }`
           }`}
         >
           {screen === "welcome" && (
@@ -2922,7 +2930,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                     ? { duration: 0 }
                     : { type: "spring", stiffness: 360, damping: 32 }
                 }
-                className="glass absolute inset-x-3 bottom-3 z-50 max-h-[76%] overflow-y-auto rounded-[1.75rem] p-5 pb-8"
+                className="glass absolute inset-x-3 bottom-[calc(0.75rem_+_env(safe-area-inset-bottom))] z-50 max-h-[76%] overflow-y-auto rounded-[1.75rem] p-5 pb-8"
               >
                 <div className="mb-5 flex items-center justify-between">
                   <div>
@@ -3058,7 +3066,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   : { type: "spring", stiffness: 380, damping: 28 }
               }
               role={notice.tone === "error" ? "alert" : "status"}
-              className={`glass absolute inset-x-5 bottom-28 z-[60] flex items-center gap-3 rounded-2xl p-4 text-xs leading-relaxed ${
+              className={`glass absolute inset-x-5 bottom-[calc(7rem_+_env(safe-area-inset-bottom))] z-[60] flex items-center gap-3 rounded-2xl p-4 text-xs leading-relaxed ${
                 notice.tone === "error"
                   ? "border-accent"
                   : notice.tone === "warning"
@@ -3110,7 +3118,6 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
             event.target.value = ""
           }}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-50 mx-auto h-1 w-28 rounded-full bg-foreground/80" />
       </div>
     </main>
   )

@@ -96,7 +96,7 @@ export default function WelcomeIntro({
       initial={playIntro && reducedMotion ? { opacity: 0 } : false}
       animate={{ opacity: 1 }}
       transition={{ duration: playIntro && reducedMotion ? 0.3 : 0 }}
-      className="relative flex min-h-full flex-col overflow-hidden px-6 pb-6"
+      className="relative flex min-h-full flex-col overflow-hidden px-6 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))]"
     >
       {/* Hero photo fades into the background instead of ending on a hard edge. */}
       <motion.img
