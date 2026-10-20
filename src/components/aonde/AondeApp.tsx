@@ -485,6 +485,16 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   const headerLockedUntil = useRef(0)
   const homeTabsRef = useRef<HTMLDivElement>(null)
   const [homeTabsStuck, setHomeTabsStuck] = useState(false)
+  // Edges of the filter chip row that hide more chips; those edges fade out.
+  const [chipsOverflow, setChipsOverflow] = useState<
+    "none" | "start" | "end" | "both"
+  >("none")
+  const measureChips = (row: HTMLElement | null) => {
+    if (!row) return
+    const start = row.scrollLeft > 4
+    const end = row.scrollLeft + row.clientWidth < row.scrollWidth - 4
+    setChipsOverflow(start && end ? "both" : start ? "start" : end ? "end" : "none")
+  }
   const [filterSheet, setFilterSheet] = useState(false)
   const [notice, setNotice] = useState<{
     text: string
@@ -1021,7 +1031,18 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   )
   const Chips = () => (
     <div className="my-4">
-      <div className="hide-scroll flex gap-2 overflow-x-auto px-5">
+      <div
+        ref={measureChips}
+        onScroll={(event) => measureChips(event.currentTarget)}
+        className={`hide-scroll flex gap-2 overflow-x-auto px-5 ${
+          {
+            none: "",
+            start: "[mask-image:linear-gradient(to_right,transparent,#000_3rem)]",
+            end: "[mask-image:linear-gradient(to_left,transparent,#000_3rem)]",
+            both: "[mask-image:linear-gradient(to_right,transparent,#000_3rem,#000_calc(100%_-_3rem),transparent)]",
+          }[chipsOverflow]
+        }`}
+      >
         {types.map((type) => (
           <motion.button
             key={type}
@@ -1442,17 +1463,13 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
               headerLockedUntil.current = performance.now() + 320
             }
           }}
-          className={`hide-scroll min-h-0 flex-1 ${
-            // The map screen manages its own layout (map + draggable sheet).
-            screen === "map"
-              ? "overflow-hidden pb-[env(safe-area-inset-bottom)]"
-              : `overflow-y-auto ${
-                  hasBottom
-                    ? "pb-[calc(7rem_+_env(safe-area-inset-bottom))]"
-                    : screen === "welcome"
-                      ? ""
-                      : "pb-[calc(2rem_+_env(safe-area-inset-bottom))]"
-                }`
+          className={`hide-scroll min-h-0 flex-1 overflow-y-auto ${
+            // The scroll padding keeps scrollIntoView targets above the nav.
+            hasBottom
+              ? "pb-[calc(7rem_+_env(safe-area-inset-bottom))] scroll-pb-[calc(7rem_+_env(safe-area-inset-bottom))]"
+              : screen === "welcome"
+                ? ""
+                : "pb-[calc(2rem_+_env(safe-area-inset-bottom))]"
           }`}
         >
           {screen === "welcome" && (
@@ -2069,7 +2086,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
             </>
           )}
           {(screen === "map" || screen === "results") && (
-            <div className={screen === "map" ? "flex h-full flex-col pt-4" : "pt-5"}>
+            <div className="pt-5">
               <div className="mb-4 px-5">
                 <Eyebrow>
                   {screen === "map" ? "Explore Curitiba" : "Resultados"}
@@ -2119,14 +2136,21 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   </div>
                 )
               ) : (
-                <div className="min-h-0 flex-1 overflow-hidden rounded-t-[1.75rem] border-t border-border">
-                  <MapExplorer
-                    museums={visible}
-                    initialSelectedId={mapFocus}
-                    onOpen={openMuseum}
-                    onLocateError={(message) => notify(message, "error")}
-                  />
-                </div>
+                <MapExplorer
+                  museums={visible}
+                  initialSelectedId={mapFocus}
+                  onOpen={openMuseum}
+                  onLocateError={(message) => notify(message, "error")}
+                  onReveal={(element) => {
+                    // A tap scrolled the screen, not the user: keep the
+                    // header as it is (it only follows the user's scrolling).
+                    headerLockedUntil.current = performance.now() + 900
+                    element.scrollIntoView({
+                      block: "nearest",
+                      behavior: reducedMotion ? "instant" : "smooth",
+                    })
+                  }}
+                />
               )}
             </div>
           )}

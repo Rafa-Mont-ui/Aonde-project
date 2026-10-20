@@ -64,7 +64,7 @@ Abra **http://localhost:3000**.
 **Primeira vez:**
 
 1. Acesse **http://localhost:3000/admin** e crie o primeiro usuário administrador.
-2. Rode `pnpm seed` para cadastrar 4 museus de exemplo, com fotos de `public/aonde`.
+2. Rode `pnpm seed` para cadastrar 4 museus de exemplo, cada um com fotos dele mesmo (e os créditos que as licenças pedem).
 
 > O banco local é criado automaticamente no arquivo `aonde.db`, e as imagens enviadas ficam na pasta `media/`. Para recomeçar do zero: pare o servidor, apague `aonde.db` e `media/` e rode `pnpm seed`.
 
@@ -106,7 +106,7 @@ Veja [.env.example](.env.example). O arquivo `.env` **não vai para o Git**.
 ## Estrutura de pastas
 
 ```
-├── public/aonde/            Imagens estáticas (logo, mapa antigo, fotos de exemplo)
+├── public/aonde/            Imagens estáticas (logo, mapa antigo, fotos do MON)
 ├── src/
 │   ├── app/
 │   │   ├── (frontend)/      Páginas do app (layout, telas, estilos globais)
@@ -114,7 +114,7 @@ Veja [.env.example](.env.example). O arquivo `.env` **não vai para o Git**.
 │   ├── collections/         Definição das coleções do Payload (Museums, Reviews…)
 │   ├── components/aonde/    Componentes do app
 │   │   ├── AondeApp.tsx       Todas as telas do app (navegação por URL)
-│   │   ├── MapExplorer.tsx    Mapa real + lista arrastável
+│   │   ├── MapExplorer.tsx    Mapa real + lista de museus abaixo dele
 │   │   ├── WelcomeIntro.tsx   Tela de boas-vindas animada
 │   │   └── Typography.tsx     Componentes de texto (títulos, legendas…)
 │   ├── lib/
@@ -124,6 +124,7 @@ Veja [.env.example](.env.example). O arquivo `.env` **não vai para o Git**.
 │   │   └── revalidate.ts      Atualiza as páginas quando o conteúdo muda
 │   ├── migrations/          Migrations do Postgres (usadas no deploy)
 │   ├── seed.ts              Dados de exemplo (pnpm seed)
+│   ├── seed-photos/         Fotos livres do Wikimedia Commons usadas pelo seed
 │   └── payload.config.ts    Configuração do Payload (banco, coleções, uploads)
 ├── .env.example             Modelo das variáveis de ambiente
 └── next.config.ts           Configuração do Next.js
@@ -141,7 +142,7 @@ Cada tela tem a sua URL. Telas de um museu específico usam `?museu=<slug>`, ent
 |---|---|
 | `/` ou `/welcome` | Boas-vindas, com animação da coruja |
 | `/home` | Início: abas **Recomendação do app**, **Recomendação dos usuários** e **Mais visitados**, carrossel, atalhos e jornada |
-| `/map` | Mapa com os museus, lista arrastável e "Perto de mim" |
+| `/map` | Mapa com os museus, lista abaixo do mapa e "Perto de mim" |
 | `/results` | Resultados filtrados (tipo, regional, acessível) |
 | `/search` | Busca por nome e por regional |
 | `/details?museu=…` | Detalhes do museu: ações rápidas, informações, acessibilidade, localização |
@@ -215,6 +216,7 @@ O mapa ([src/components/aonde/MapExplorer.tsx](src/components/aonde/MapExplorer.
 
 - **Mapa de fundo:** vem do **OpenStreetMap** e não precisa de chave de API. Um filtro em `styles.css` deixa as cores no tom do app, e no tema escuro o mapa fica escuro.
 - **Pinos:** usam a latitude e a longitude cadastradas no museu. Museus sem coordenadas aparecem na lista com "Localização não cadastrada".
+- **Lista:** fica num bloco abaixo do mapa. Tocar num pino mostra o cartão do museu logo abaixo do mapa; tocar num museu da lista volta ao mapa e centraliza o pino.
 - **"Perto de mim":** usa a localização do navegador, que pede permissão, e ordena os museus por distância.
 - **"Como chegar":** abre a rota no Google Maps por um link. Não usa API.
 
@@ -267,16 +269,7 @@ O código já está preparado. Para o primeiro deploy:
 
 ## Pendências e limitações conhecidas
 
-- **Fotos de exemplo com nomes trocados** em `public/aonde/`:
-
-  | Arquivo | O que a foto mostra |
-  |---|---|
-  | `museu-oscar-niemeyer.jpg` | Um casario à beira de um rio, que não é o MON |
-  | `museu-arquitetura.jpg` | O MON de verdade |
-  | `curitiba-cultural.jpg` | Vista aérea do MON |
-  | `museu-fachada.jpg` | Uma igreja |
-
-  Por isso, as capas dos museus de exemplo estão incorretas. Troque-as pelo `/admin`.
+- **Origem das fotos:** as fotos do Museu Paranaense, do Museu do Holocausto e do Capão da Imbuia são do Wikimedia Commons, com licença livre e crédito exibido no app. Não há foto livre do interior do Museu do Holocausto; a capa mostra a entrada do prédio da Sinagoga Beit Yaacov, onde o museu fica. As fotos do MON vieram do modelo do Figma, sem autor ou licença conhecidos; antes de publicar de verdade, troque-as por fotos com licença conhecida.
 - **Dados de exemplo:** endereços, horários e preços dos museus do seed são aproximados. Confira antes de publicar. Acessibilidade só está marcada no MON (rampas), a única informação com fonte; preencha o resto com dados confirmados, por exemplo com o Guia de Acessibilidade da Prefeitura de Curitiba.
 - **E-mail:** não há serviço de e-mail configurado. Recuperação de senha e código de verificação (`/reset`, `/verify`) ainda não funcionam; as telas avisam isso.
 - **Fotos da avaliação e foto de perfil:** ficam só no navegador da pessoa (pré-visualização e `localStorage`) e não são enviadas ao servidor.

@@ -159,8 +159,11 @@
     contrast(0.9);
 }
 
-.leaflet-control-attribution {
-  border-radius: 0 0 8px 0;
+/* Inset from the map card's rounded corner so it isn't clipped. */
+.aonde-map.leaflet-container .leaflet-control-attribution {
+  margin: 0 0 10px 14px;
+  border-radius: 999px;
+  padding: 1px 8px;
   font-size: 9px;
 }
 

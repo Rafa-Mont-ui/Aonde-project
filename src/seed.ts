@@ -1,6 +1,7 @@
 /**
- * Local starter data: uploads the photos in public/aonde to Media and creates
- * a few Curitiba museums. Safe to run more than once; existing museums only get
+ * Local starter data: uploads each museum's photos to Media and creates a few
+ * Curitiba museums. Photos from Wikimedia Commons live in src/seed-photos and
+ * keep the credit their license requires. Safe to run more than once; existing museums only get
  * missing coordinates filled in.
  *
  *   pnpm seed
@@ -10,8 +11,17 @@ import { getPayload } from "payload"
 import config from "@payload-config"
 import type { Museum } from "./payload-types"
 
-type MuseumSeed = Omit<Museum, "id" | "cover" | "createdAt" | "updatedAt"> & {
-  photo: string
+type SeedPhoto = {
+  /** Relative to the project root. */
+  file: string
+  alt: string
+  credit?: string
+  creditUrl?: string
+}
+
+type MuseumSeed = Omit<Museum, "id" | "cover" | "gallery" | "createdAt" | "updatedAt"> & {
+  /** The first photo is the cover; the rest go to the gallery. */
+  photos: SeedPhoto[]
 }
 
 const museums: MuseumSeed[] = [
@@ -22,7 +32,10 @@ const museums: MuseumSeed[] = [
     district: "Matriz",
     description:
       "Conhecido como Museu do Olho, reúne artes visuais, arquitetura e design em um dos edifícios mais icônicos de Curitiba.",
-    photo: "museu-oscar-niemeyer.jpg",
+    photos: [
+      { file: "public/aonde/museu-arquitetura.jpg", alt: "Museu Oscar Niemeyer, o Museu do Olho" },
+      { file: "public/aonde/curitiba-cultural.jpg", alt: "Vista aérea do Museu Oscar Niemeyer" },
+    ],
     openingHours: "Ter. a dom., 10h às 18h",
     ticketInfo: "Ingresso pago, com gratuidade em dias específicos",
     exhibitionInfo: "Exposições de arte moderna e contemporânea",
@@ -41,7 +54,26 @@ const museums: MuseumSeed[] = [
     district: "Matriz",
     description:
       "Um dos museus mais antigos do Brasil, com acervo de história, arqueologia e antropologia do Paraná.",
-    photo: "museu-fachada.jpg",
+    photos: [
+      {
+        file: "src/seed-photos/paranaense-jardim.jpg",
+        alt: "Museu Paranaense visto do jardim",
+        credit: "Foto: Carlahcarolineferreira / Wikimedia Commons, CC BY-SA 4.0",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Museu_Paranaense_do_jardim.jpg",
+      },
+      {
+        file: "src/seed-photos/paranaense-fachada.jpg",
+        alt: "Fachada do Museu Paranaense",
+        credit: "Foto: Mimyuu / Wikimedia Commons, CC0",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Museu_Paranaense_fa%C3%A7ade.jpg",
+      },
+      {
+        file: "src/seed-photos/paranaense-entrada.jpg",
+        alt: "Entrada do Museu Paranaense, no Largo da Ordem",
+        credit: "Foto: Andressa Novo Lima / Wikimedia Commons, CC BY-SA 4.0",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Museu_Paranaense_-_Largo_da_Ordem_Curitiba_(1).jpg",
+      },
+    ],
     openingHours: "Ter. a dom., 10h às 17h30",
     ticketInfo: "Entrada gratuita",
     exhibitionInfo: "Acervo de história e antropologia",
@@ -58,7 +90,15 @@ const museums: MuseumSeed[] = [
     district: "Matriz",
     description:
       "Espaço de memória dedicado à história do Holocausto e à educação para os direitos humanos.",
-    photo: "museu-arquitetura.jpg",
+    photos: [
+      {
+        // The museum is inside the Beit Yaacov synagogue building.
+        file: "src/seed-photos/holocausto-beit-yaacov.jpg",
+        alt: "Entrada do prédio da Sinagoga Beit Yaacov, onde fica o Museu do Holocausto",
+        credit: "Foto: Isacks1 / Wikimedia Commons, CC BY-SA 4.0 (recortada)",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Centro_Israelita_do_Paran%C3%A1.jpg",
+      },
+    ],
     openingHours: "Visitas mediante agendamento",
     ticketInfo: "Entrada gratuita com agendamento",
     address: "R. Cel. Agostinho Macedo, 248 - Bom Retiro, Curitiba - PR",
@@ -74,7 +114,26 @@ const museums: MuseumSeed[] = [
     district: "Cajuru",
     description:
       "Museu dedicado à fauna, flora e geologia do Paraná, em meio a um bosque de araucárias.",
-    photo: "curitiba-cultural.jpg",
+    photos: [
+      {
+        file: "src/seed-photos/capao-predio.jpg",
+        alt: "Prédio do Museu de História Natural no bosque",
+        credit: "Foto: YuriNikolai / Wikimedia Commons, CC BY-SA 4.0",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Museu_de_Hist%C3%B3ria_Natural_do_Cap%C3%A3o_da_Imbuia_building.jpg",
+      },
+      {
+        file: "src/seed-photos/capao-araucaria.jpg",
+        alt: "Araucária no Bosque do Capão da Imbuia",
+        credit: "Foto: YuriNikolai / Wikimedia Commons, CC BY-SA 4.0",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Araucaria_Bosque_do_Cap%C3%A3o_da_Imbuia.jpg",
+      },
+      {
+        file: "src/seed-photos/capao-portao.jpg",
+        alt: "Portão de entrada do Bosque do Capão da Imbuia",
+        credit: "Foto: J.M.Guimarães / Wikimedia Commons, domínio público",
+        creditUrl: "https://commons.wikimedia.org/wiki/File:Nivaldo_Braga_Museu_Hist%C3%B3ria_Natural.JPG",
+      },
+    ],
     openingHours: "Ter. a dom., 9h às 16h45",
     ticketInfo: "Entrada gratuita",
     address: "R. Prof. Benedito Conceição, 407 - Capão da Imbuia, Curitiba - PR",
@@ -84,9 +143,8 @@ const museums: MuseumSeed[] = [
 ]
 
 const payload = await getPayload({ config })
-const photosDir = path.resolve(process.cwd(), "public", "aonde")
 
-for (const { photo, ...museum } of museums) {
+for (const { photos, ...museum } of museums) {
   const existing = await payload.find({
     collection: "museums",
     where: { slug: { equals: museum.slug } },
@@ -110,15 +168,22 @@ for (const { photo, ...museum } of museums) {
     continue
   }
 
-  const cover = await payload.create({
-    collection: "media",
-    data: { alt: museum.name },
-    filePath: path.join(photosDir, photo),
-    overrideAccess: true,
-  })
+  // One upload at a time: SQLite allows a single writer.
+  const uploaded = []
+  for (const { file, ...data } of photos) {
+    uploaded.push(
+      await payload.create({
+        collection: "media",
+        data,
+        filePath: path.resolve(process.cwd(), file),
+        overrideAccess: true,
+      }),
+    )
+  }
+  const [cover, ...gallery] = uploaded
   await payload.create({
     collection: "museums",
-    data: { ...museum, cover: cover.id },
+    data: { ...museum, cover: cover.id, gallery: gallery.map((photo) => photo.id) },
     overrideAccess: true,
   })
   payload.logger.info(`Created ${museum.name}`)
