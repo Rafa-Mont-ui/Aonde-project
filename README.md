@@ -142,14 +142,14 @@ Cada tela tem a sua URL. Telas de um museu específico usam `?museu=<slug>`, ent
 | URL | Tela |
 |---|---|
 | `/` ou `/welcome` | Boas-vindas, com animação da coruja |
-| `/home` | Início: abas **Recomendação do app**, **Recomendação dos usuários** e **Mais visitados**, carrossel, atalhos e jornada |
+| `/home` | Início: atalhos (Arte, História, Matriz, Mais opções) logo abaixo da pergunta, abas **Recomendação do app**, **Recomendação dos usuários** e **Mais visitados** e carrossel |
 | `/map` | Explorar no modo **Mapa**: museus no mapa, lista abaixo do mapa e "Perto de mim" |
 | `/results` | Explorar no modo **Todos os museus**: grade de fotos com os mesmos filtros (tipo, regional, acessível) |
 | `/search` | Busca por nome e por regional |
 | `/details?museu=…` | Detalhes do museu: ações rápidas, informações, acessibilidade, localização |
 | `/reviews?museu=…` | Avaliações do museu |
 | `/rate?museu=…` | Avaliar o museu (4 critérios de 1 a 5) |
-| `/profile` | Perfil, progresso, visitados, "quero ir" e avaliações |
+| `/profile` | Perfil e progresso cultural (regionais visitadas e totais de visitados, "quero ir" e avaliações, que abrem a lista correspondente) |
 | `/saved` | Lista "Desejo ir" |
 | `/signup`, `/login` | Criar conta e entrar |
 | `/accessibility` | Preferências: tamanho do texto, tema claro/escuro, texto alternativo |

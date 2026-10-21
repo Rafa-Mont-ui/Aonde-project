@@ -1927,6 +1927,54 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   Encontre arquitetura, memória e novas histórias perto de você.
                 </BodyText>
               </section>
+              <section aria-label="Exploração rápida" className="px-5 pb-4">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    { label: "Arte", hint: "Museus de arte", icon: Palette },
+                    { label: "História", hint: "Memória e acervo", icon: Landmark },
+                    { label: "Matriz", hint: "Centro da cidade", icon: MapPin },
+                  ].map(({ label, hint, icon: Icon }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        if (label === "Matriz") {
+                          setDistrict("Matriz")
+                          setFilter("Tipos")
+                        } else {
+                          setFilter(label)
+                          setDistrict("")
+                        }
+                        go("results")
+                      }}
+                      className="glass flex min-h-16 items-center gap-3 rounded-2xl p-3 text-left"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/45 text-accent">
+                        <Icon size={18} strokeWidth={1.7} />
+                      </span>
+                      <span className="min-w-0">
+                        <CardTitle className="text-[.8em]">{label}</CardTitle>
+                        <Caption className="mt-0.5 block">{hint}</Caption>
+                      </span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setFilterSheet(true)}
+                    className="flex min-h-16 items-center gap-3 rounded-2xl bg-primary p-3 text-left text-background shadow-[0_10px_24px_#3c654333]"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/15">
+                      <SlidersHorizontal size={18} strokeWidth={1.7} />
+                    </span>
+                    <span className="min-w-0">
+                      <CardTitle className="text-[.8em] text-background">
+                        Mais opções
+                      </CardTitle>
+                      <span className="mt-0.5 block text-[.62em] font-medium leading-[1.35] text-background/75">
+                        Todos os filtros
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </section>
               {/* Sticks to the top once the header slides away (see onScroll). */}
               <div ref={homeTabsRef} aria-hidden="true" className="h-0" />
               <div
@@ -2032,123 +2080,6 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   </button>
                 </div>
               )}
-              <section className="px-5 pb-8 pt-1">
-                <div className="mb-3">
-                  <Eyebrow>Exploração rápida</Eyebrow>
-                  <SectionTitle className="mt-1">Escolha um caminho</SectionTitle>
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {[
-                    { label: "Arte", hint: "Museus de arte", icon: Palette },
-                    { label: "História", hint: "Memória e acervo", icon: Landmark },
-                    { label: "Matriz", hint: "Centro da cidade", icon: MapPin },
-                  ].map(({ label, hint, icon: Icon }) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        if (label === "Matriz") {
-                          setDistrict("Matriz")
-                          setFilter("Tipos")
-                        } else {
-                          setFilter(label)
-                          setDistrict("")
-                        }
-                        go("results")
-                      }}
-                      className="glass flex min-h-16 items-center gap-3 rounded-2xl p-3 text-left"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/45 text-accent">
-                        <Icon size={18} strokeWidth={1.7} />
-                      </span>
-                      <span className="min-w-0">
-                        <CardTitle className="text-[.8em]">{label}</CardTitle>
-                        <Caption className="mt-0.5 block">{hint}</Caption>
-                      </span>
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setFilterSheet(true)}
-                    className="flex min-h-16 items-center gap-3 rounded-2xl bg-primary p-3 text-left text-background shadow-[0_10px_24px_#3c654333]"
-                  >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background/15">
-                      <SlidersHorizontal size={18} strokeWidth={1.7} />
-                    </span>
-                    <span className="min-w-0">
-                      <CardTitle className="text-[.8em] text-background">
-                        Mais opções
-                      </CardTitle>
-                      <span className="mt-0.5 block text-[.62em] font-medium leading-[1.35] text-background/75">
-                        Todos os filtros
-                      </span>
-                    </span>
-                  </button>
-                </div>
-              </section>
-              <section className="px-5 pb-8" aria-labelledby="journey-title">
-                <div className="mb-3 flex items-end justify-between">
-                  <div>
-                    <Eyebrow>Sua jornada</Eyebrow>
-                    <SectionTitle id="journey-title" className="mt-1">
-                      Curitiba cultural
-                    </SectionTitle>
-                  </div>
-                  <Caption className="font-semibold">
-                    {exploredDistricts} de {districts.length} regionais
-                  </Caption>
-                </div>
-                <div className="glass overflow-hidden rounded-[1.75rem] p-4">
-                  <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-secondary/35">
-                    <motion.div
-                      initial={false}
-                      animate={{
-                        width: `${(exploredDistricts / districts.length) * 100}%`,
-                      }}
-                      transition={{ duration: reducedMotion ? 0 : 0.45 }}
-                      className="h-full rounded-full bg-primary"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      {
-                        value: visitedIndexes.length,
-                        label: "visitados",
-                        icon: Landmark,
-                        action: () => go("profile"),
-                      },
-                      {
-                        value: savedIndexes.length,
-                        label: "quero ir",
-                        icon: Bookmark,
-                        action: () => go("saved"),
-                      },
-                      {
-                        value: Object.keys(myReviews).length,
-                        label: "avaliações",
-                        icon: Star,
-                        action: () => {
-                          setProfileTab("Avaliações")
-                          go("profile")
-                        },
-                      },
-                    ].map(({ value, label, icon: Icon, action }) => (
-                      <button
-                        key={label}
-                        onClick={action}
-                        className="min-h-20 rounded-2xl bg-secondary/25 p-2 text-center"
-                      >
-                        <Icon
-                          size={16}
-                          className="mx-auto mb-1.5 text-accent"
-                        />
-                        <span className="block text-sm font-bold">{value}</span>
-                        <span className="mt-0.5 block text-[8px] uppercase tracking-wide text-foreground/60">
-                          {label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </section>
               <section className="px-5 pb-8">
                 <div className="mb-4 flex items-end justify-between">
                   <div>
@@ -2804,40 +2735,67 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                 </div>
               )}
               </section>
-              <section className="glass mx-5 mt-6 rounded-[1.5rem] p-4">
-                <Eyebrow>Progresso cultural</Eyebrow>
-                <div className="mt-3 grid grid-cols-3 divide-x divide-border">
-                  {[
-                    { value: visitedIndexes.length, label: "Visitados" },
-                    { value: exploredDistricts, label: "Regionais" },
-                    {
-                      value: savedIndexes.length,
-                      label: "Quero ir",
-                      action: () => go("saved"),
-                    },
-                  ].map(({ value, label, action }) => {
-                    const content = (
-                      <>
-                        <span className="block text-[1.2em] font-bold">
-                          {value}
-                        </span>
-                        <Caption className="mt-0.5 block">{label}</Caption>
-                      </>
-                    )
-                    return action ? (
+              <section className="mx-5 mt-6" aria-labelledby="journey-title">
+                <div className="mb-3 flex items-end justify-between">
+                  <div>
+                    <Eyebrow>Progresso cultural</Eyebrow>
+                    <SectionTitle id="journey-title" className="mt-1">
+                      Curitiba cultural
+                    </SectionTitle>
+                  </div>
+                  <Caption className="font-semibold">
+                    {exploredDistricts} de {districts.length} regionais
+                  </Caption>
+                </div>
+                <div className="glass overflow-hidden rounded-[1.75rem] p-4">
+                  <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-secondary/35">
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        width: `${(exploredDistricts / districts.length) * 100}%`,
+                      }}
+                      transition={{ duration: reducedMotion ? 0 : 0.45 }}
+                      className="h-full rounded-full bg-primary"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        value: visitedIndexes.length,
+                        label: "visitados",
+                        icon: Landmark,
+                        tab: "Visitados",
+                      },
+                      {
+                        value: savedIndexes.length,
+                        label: "quero ir",
+                        icon: Bookmark,
+                        tab: "Quero ir",
+                      },
+                      {
+                        value: Object.keys(myReviews).length,
+                        label: "avaliações",
+                        icon: Star,
+                        tab: "Avaliações",
+                      },
+                    ].map(({ value, label, icon: Icon, tab }) => (
                       <button
                         key={label}
-                        onClick={action}
-                        className="min-h-11 px-2 text-center"
+                        // Opens the matching list right below the card.
+                        onClick={() => setProfileTab(tab)}
+                        className="min-h-20 rounded-2xl bg-secondary/25 p-2 text-center"
                       >
-                        {content}
+                        <Icon
+                          size={16}
+                          className="mx-auto mb-1.5 text-accent"
+                        />
+                        <span className="block text-sm font-bold">{value}</span>
+                        <span className="mt-0.5 block text-[8px] uppercase tracking-wide text-foreground/60">
+                          {label}
+                        </span>
                       </button>
-                    ) : (
-                      <div key={label} className="px-2 text-center">
-                        {content}
-                      </div>
-                    )
-                  })}
+                    ))}
+                  </div>
                 </div>
               </section>
               <div className="my-6 flex justify-center gap-2 px-4">
