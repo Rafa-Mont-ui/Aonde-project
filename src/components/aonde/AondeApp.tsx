@@ -862,7 +862,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
       icon: Landmark,
     },
   ]
-  // Same layout as the welcome screen header; the pill opens the menu.
+  // Same layout as the welcome screen header, plus the menu button.
   const Header = () => (
     <header className="relative z-20 flex h-[72px] shrink-0 items-center justify-between px-5">
       <button
@@ -877,12 +877,9 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
         aria-haspopup="dialog"
         aria-expanded={menu}
         onClick={() => setMenu(!menu)}
-        className="flex min-h-11 items-center rounded-full"
+        className="glass flex h-11 w-11 items-center justify-center rounded-full"
       >
-        <span className="glass flex items-center gap-2 rounded-full py-1.5 pl-3 pr-2.5 text-[8px] font-bold uppercase tracking-[.14em]">
-          Curitiba cultural
-          <Menu size={14} strokeWidth={2} />
-        </span>
+        <Menu size={20} strokeWidth={1.6} />
       </button>
     </header>
   )

@@ -118,12 +118,9 @@ export default function WelcomeIntro({
           delay: animateIntro ? 0.65 : 0,
           duration: reducedMotion ? 0 : 0.45,
         }}
-        className="relative z-10 mt-3 flex items-center justify-between"
+        className="relative z-10 mt-3 flex items-center"
       >
         <AondeLogo className="h-11 w-28" />
-        <span className="glass rounded-full px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.14em]">
-          Curitiba cultural
-        </span>
       </motion.div>
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-7 pt-6 text-center">

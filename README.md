@@ -157,7 +157,7 @@ Cada tela tem a sua URL. Telas de um museu específico usam `?museu=<slug>`, ent
 
 **Comportamentos de interface que valem saber:**
 
-- **Cabeçalho:** logo à esquerda e a pílula "Curitiba cultural" à direita, igual à tela de boas-vindas. A pílula abre o menu (perfil, "Desejo ir", acessibilidade, ajuda e entrar/sair). No Início, Mapa e Todos os museus, ele some ao rolar para baixo e volta ao rolar para cima.
+- **Cabeçalho:** logo à esquerda, como na tela de boas-vindas, e o botão de menu à direita (perfil, "Desejo ir", acessibilidade, ajuda e entrar/sair). No Início, Mapa e Todos os museus, ele some ao rolar para baixo e volta ao rolar para cima.
 - **Início:** as abas grudam no topo ao rolar, como no Pinterest.
 - **Explorar:** o seletor **Mapa / Todos os museus** troca o modo de ver sem perder a busca e os filtros.
 - **Visitantes:** dá para explorar sem conta. Salvar, avaliar e editar o perfil pedem cadastro.
