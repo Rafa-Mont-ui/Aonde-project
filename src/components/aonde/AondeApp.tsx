@@ -39,6 +39,8 @@ import {
   SlidersHorizontal,
   Accessibility,
   CircleHelp,
+  LayoutGrid,
+  Map as MapIcon,
   MapPin,
   Landmark,
   Palette,
@@ -291,13 +293,6 @@ function MuseumSlide({
           </motion.button>
         </AnimatePresence>
       </div>
-    </div>
-  )
-}
-function Logo() {
-  return (
-    <div className="flex h-16 w-28 items-center justify-center">
-      <AondeLogo className="h-full w-full" />
     </div>
   )
 }
@@ -867,24 +862,28 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
       icon: Landmark,
     },
   ]
+  // Same layout as the welcome screen header; the pill opens the menu.
   const Header = () => (
-    <header className="relative z-20 flex h-[104px] shrink-0 items-start justify-between rounded-b-[50%_24px] border-b border-border bg-secondary/55 px-5 pt-3 shadow-[0_8px_24px_var(--surface-shadow)] backdrop-blur-xl">
-      <IconButton
-        label="Ajuda"
-        onClick={() =>
-          notify(
-            "Explore os museus, descubra a cidade e compartilhe sua avaliação.",
-          )
-        }
+    <header className="relative z-20 flex h-[72px] shrink-0 items-center justify-between px-5">
+      <button
+        aria-label="Página inicial"
+        onClick={() => go("home")}
+        className="rounded-xl"
       >
-        <CircleHelp size={22} strokeWidth={1.4} />
-      </IconButton>
-      <button aria-label="Página inicial" onClick={() => go("home")}>
-        <Logo />
+        <AondeLogo className="h-11 w-28" />
       </button>
-      <IconButton label="Abrir menu" onClick={() => setMenu(!menu)}>
-        <Menu size={24} strokeWidth={1.4} />
-      </IconButton>
+      <button
+        aria-label="Abrir menu"
+        aria-haspopup="dialog"
+        aria-expanded={menu}
+        onClick={() => setMenu(!menu)}
+        className="flex min-h-11 items-center rounded-full"
+      >
+        <span className="glass flex items-center gap-2 rounded-full py-1.5 pl-3 pr-2.5 text-[8px] font-bold uppercase tracking-[.14em]">
+          Curitiba cultural
+          <Menu size={14} strokeWidth={2} />
+        </span>
+      </button>
     </header>
   )
   const Bottom = ({ active }: { active: "home" | "search" | "profile" }) => {
@@ -1411,7 +1410,8 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           <motion.div
             initial={false}
             animate={{
-              marginTop: headerHidden ? -104 : 0,
+              // The header's height (h-[72px]).
+              marginTop: headerHidden ? -72 : 0,
               opacity: headerHidden ? 0 : 1,
             }}
             transition={{
@@ -1808,7 +1808,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
           {screen === "home" && (
             <>
               <section className="px-5 pb-5 pt-6">
-                <Eyebrow>Curitiba cultural</Eyebrow>
+                <Eyebrow>Museus de Curitiba</Eyebrow>
                 <DisplayTitle className="mt-2 max-w-[330px]">
                   O que você quer descobrir hoje?
                 </DisplayTitle>
@@ -2089,7 +2089,7 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
             <div className="pt-5">
               <div className="mb-4 px-5">
                 <Eyebrow>
-                  {screen === "map" ? "Explore Curitiba" : "Resultados"}
+                  {screen === "results" && query ? "Resultados" : "Explore Curitiba"}
                 </Eyebrow>
                 <div className="mt-1 flex items-end justify-between gap-4">
                   <SectionTitle>
@@ -2108,6 +2108,32 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                   </Caption>
                 </div>
               </div>
+              {/* Same filters in both views; only the presentation changes. */}
+              <nav
+                aria-label="Modo de visualização"
+                className="glass mx-5 mb-3 grid grid-cols-2 gap-1 rounded-2xl p-1"
+              >
+                {(
+                  [
+                    { id: "map", label: "Mapa", icon: MapIcon },
+                    { id: "results", label: "Todos os museus", icon: LayoutGrid },
+                  ] as const
+                ).map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    aria-current={screen === id ? "page" : undefined}
+                    onClick={() => go(id)}
+                    className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-[.72em] font-semibold ${
+                      screen === id
+                        ? "bg-primary text-background shadow-sm"
+                        : "text-foreground/70 hover:bg-secondary/30"
+                    }`}
+                  >
+                    <Icon size={16} strokeWidth={1.7} />
+                    {label}
+                  </button>
+                ))}
+              </nav>
               {SearchBar({})}
               {Chips()}
               {screen === "results" ? (
@@ -2898,6 +2924,18 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
                     )}
                   </button>
                 ))}
+                <button
+                  onClick={() => {
+                    setMenu(false)
+                    notify(
+                      "Explore os museus, descubra a cidade e compartilhe sua avaliação.",
+                    )
+                  }}
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[.8em] font-medium hover:bg-secondary/30 focus-visible:bg-secondary/30 focus-visible:-outline-offset-2"
+                >
+                  <CircleHelp size={18} strokeWidth={1.7} className="text-accent" />
+                  Ajuda
+                </button>
                 <div className="mx-3 my-1 h-px bg-border" />
                 {authenticated ? (
                   <button

@@ -143,8 +143,8 @@ Cada tela tem a sua URL. Telas de um museu específico usam `?museu=<slug>`, ent
 |---|---|
 | `/` ou `/welcome` | Boas-vindas, com animação da coruja |
 | `/home` | Início: abas **Recomendação do app**, **Recomendação dos usuários** e **Mais visitados**, carrossel, atalhos e jornada |
-| `/map` | Mapa com os museus, lista abaixo do mapa e "Perto de mim" |
-| `/results` | Resultados filtrados (tipo, regional, acessível) |
+| `/map` | Explorar no modo **Mapa**: museus no mapa, lista abaixo do mapa e "Perto de mim" |
+| `/results` | Explorar no modo **Todos os museus**: grade de fotos com os mesmos filtros (tipo, regional, acessível) |
 | `/search` | Busca por nome e por regional |
 | `/details?museu=…` | Detalhes do museu: ações rápidas, informações, acessibilidade, localização |
 | `/reviews?museu=…` | Avaliações do museu |
@@ -157,7 +157,9 @@ Cada tela tem a sua URL. Telas de um museu específico usam `?museu=<slug>`, ent
 
 **Comportamentos de interface que valem saber:**
 
-- **Início:** o cabeçalho (logo e menu) some ao rolar para baixo e volta ao rolar para cima, e as abas grudam no topo, como no Pinterest.
+- **Cabeçalho:** logo à esquerda e a pílula "Curitiba cultural" à direita, igual à tela de boas-vindas. A pílula abre o menu (perfil, "Desejo ir", acessibilidade, ajuda e entrar/sair). No Início, Mapa e Todos os museus, ele some ao rolar para baixo e volta ao rolar para cima.
+- **Início:** as abas grudam no topo ao rolar, como no Pinterest.
+- **Explorar:** o seletor **Mapa / Todos os museus** troca o modo de ver sem perder a busca e os filtros.
 - **Visitantes:** dá para explorar sem conta. Salvar, avaliar e editar o perfil pedem cadastro.
 - **Preferências** de tamanho de texto, tema e texto alternativo ficam salvas no navegador.
 
