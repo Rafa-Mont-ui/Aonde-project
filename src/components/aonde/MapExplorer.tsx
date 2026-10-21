@@ -11,6 +11,7 @@ import {
   Marker,
   TileLayer,
   useMap,
+  useMapEvents,
 } from "react-leaflet"
 import {
   Accessibility,
@@ -31,13 +32,17 @@ const curitiba: LatLng = [-25.4284, -49.2733]
 const landmarkSvg =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"/><path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></svg>'
 
-function pinIcon(selected: boolean) {
-  const size = selected ? 44 : 34
+function pinIcon(selected: boolean, zoom: number) {
+  // Smaller pins when zoomed out keep the dense city center readable.
+  const size = selected ? 44 : zoom >= 15 ? 34 : zoom >= 13 ? 26 : 16
+  // The tappable area stays at least 28px even when the dot is smaller.
+  const hit = Math.max(size, 28)
+  const classes = `aonde-pin${selected ? " is-selected" : ""}${size < 20 ? " is-dot" : ""}`
   return L.divIcon({
     className: "",
-    html: `<span class="aonde-pin${selected ? " is-selected" : ""}">${landmarkSvg}</span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<span class="${classes}" style="width:${size}px;height:${size}px;margin:${(hit - size) / 2}px">${landmarkSvg}</span>`,
+    iconSize: [hit, hit],
+    iconAnchor: [hit / 2, hit / 2],
   })
 }
 
@@ -67,6 +72,36 @@ function coordinates(museum: AondeMuseum): LatLng | null {
   return museum.latitude != null && museum.longitude != null
     ? [museum.latitude, museum.longitude]
     : null
+}
+
+// Some museums share a building (MAC-PR inside the MON, the Gravura and
+// Fotografia museums in the Memorial de Curitiba). Fan their pins out around
+// the shared point so each one can be tapped once the map is zoomed in.
+function pinPositions(museums: AondeMuseum[]) {
+  const groups: { center: LatLng; members: AondeMuseum[] }[] = []
+  for (const museum of museums) {
+    const latlng = coordinates(museum)
+    if (!latlng) continue
+    const group = groups.find(({ center }) => distanceKm(center, latlng) < 0.02)
+    if (group) group.members.push(museum)
+    else groups.push({ center: latlng, members: [museum] })
+  }
+  const positions = new Map<string, LatLng>()
+  for (const { center, members } of groups) {
+    members.forEach((museum, i) => {
+      if (members.length === 1) {
+        positions.set(museum.id, center)
+        return
+      }
+      // About 18 m from the shared point.
+      const angle = (2 * Math.PI * i) / members.length
+      positions.set(museum.id, [
+        center[0] + 0.00016 * Math.cos(angle),
+        center[1] + 0.00018 * Math.sin(angle),
+      ])
+    })
+  }
+  return positions
 }
 
 function MapController({
@@ -113,6 +148,11 @@ function MapController({
   return null
 }
 
+function ZoomWatcher({ onZoom }: { onZoom: (zoom: number) => void }) {
+  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) })
+  return null
+}
+
 export default function MapExplorer({
   museums,
   initialSelectedId,
@@ -134,28 +174,29 @@ export default function MapExplorer({
   )
   const [user, setUser] = useState<LatLng | null>(null)
   const [locating, setLocating] = useState(false)
+  const [zoom, setZoom] = useState(12)
+  const positions = useMemo(() => pinPositions(museums), [museums])
   const [focus, setFocus] = useState<{ latlng: LatLng; key: number } | null>(
     () => {
-      const initial = museums.find((item) => item.id === initialSelectedId)
-      const latlng = initial && coordinates(initial)
+      const latlng = initialSelectedId && positions.get(initialSelectedId)
       return latlng ? { latlng, key: 0 } : null
     },
   )
 
   const sorted = useMemo(() => {
     const withDistance = museums.map((museum) => {
-      const latlng = coordinates(museum)
+      const real = coordinates(museum)
       return {
         museum,
-        latlng,
-        distance: user && latlng ? distanceKm(user, latlng) : null,
+        latlng: positions.get(museum.id) ?? null,
+        distance: user && real ? distanceKm(user, real) : null,
       }
     })
     if (!user) return withDistance
     return [...withDistance].sort(
       (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity),
     )
-  }, [museums, user])
+  }, [museums, positions, user])
 
   const points = sorted.flatMap((item) => (item.latlng ? [item.latlng] : []))
   const fitKey = museums.map((item) => item.id).join(",")
@@ -163,7 +204,7 @@ export default function MapExplorer({
 
   const select = (id: string) => {
     setSelectedId(id)
-    const latlng = coordinates(museums.find((item) => item.id === id)!)
+    const latlng = positions.get(id)
     if (latlng) setFocus({ latlng, key: Date.now() })
   }
 
@@ -212,12 +253,13 @@ export default function MapExplorer({
           />
           <AttributionControl position="bottomleft" prefix={false} />
           <MapController points={points} fitKey={fitKey} focus={focus} />
+          <ZoomWatcher onZoom={setZoom} />
           {sorted.map(({ museum, latlng }) =>
             latlng ? (
               <Marker
                 key={`${museum.id}-${museum.id === selectedId}`}
                 position={latlng}
-                icon={pinIcon(museum.id === selectedId)}
+                icon={pinIcon(museum.id === selectedId, zoom)}
                 title={museum.name}
                 zIndexOffset={museum.id === selectedId ? 1000 : 0}
                 eventHandlers={{

@@ -22,7 +22,7 @@ export async function getAondeMuseums(): Promise<AondeMuseum[]> {
   const { docs } = await payload.find({
     collection: "museums",
     depth: 1,
-    limit: 50,
+    pagination: false,
     sort: "createdAt",
     overrideAccess: false,
   })

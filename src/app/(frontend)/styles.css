@@ -139,6 +139,15 @@
   height: 52%;
 }
 
+/* Zoomed-out pins are plain dots; the icon would be too small to read. */
+.aonde-pin.is-dot {
+  border-width: 1.5px;
+}
+
+.aonde-pin.is-dot svg {
+  display: none;
+}
+
 .aonde-pin.is-selected {
   background: var(--brand-brown);
   box-shadow:

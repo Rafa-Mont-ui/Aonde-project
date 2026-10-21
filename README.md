@@ -64,7 +64,7 @@ Abra **http://localhost:3000**.
 **Primeira vez:**
 
 1. Acesse **http://localhost:3000/admin** e crie o primeiro usuário administrador.
-2. Rode `pnpm seed` para cadastrar 4 museus de exemplo, cada um com fotos dele mesmo (e os créditos que as licenças pedem).
+2. Rode `pnpm seed` para cadastrar os 67 museus da lista da equipe, com fotos de cada um (e os créditos que as licenças pedem).
 
 > O banco local é criado automaticamente no arquivo `aonde.db`, e as imagens enviadas ficam na pasta `media/`. Para recomeçar do zero: pare o servidor, apague `aonde.db` e `media/` e rode `pnpm seed`.
 
@@ -77,7 +77,7 @@ Abra **http://localhost:3000**.
 | `pnpm dev` | Servidor de desenvolvimento em `http://localhost:3000` |
 | `pnpm build` | Build de produção (gera o import map do admin, os tipos e o `next build`) |
 | `pnpm start` | Roda o build de produção |
-| `pnpm seed` | Cadastra os museus de exemplo. Pode rodar várias vezes: não duplica e só completa coordenadas que estiverem vazias |
+| `pnpm seed` | Cadastra os museus de `src/seed-museums.ts`. Pode rodar várias vezes: não duplica e só completa coordenadas que estiverem vazias |
 | `pnpm migrate:create <nome>` | Cria uma migration do Postgres (veja [Banco de dados e migrations](#banco-de-dados-e-migrations)) |
 | `pnpm vercel-build` | Usado pela Vercel: roda as migrations e depois o build |
 | `pnpm generate:types` | Regenera `src/payload-types.ts` a partir das coleções |
@@ -123,8 +123,9 @@ Veja [.env.example](.env.example). O arquivo `.env` **não vai para o Git**.
 │   │   ├── accessibility.ts   Lista de recursos de acessibilidade (admin + app)
 │   │   └── revalidate.ts      Atualiza as páginas quando o conteúdo muda
 │   ├── migrations/          Migrations do Postgres (usadas no deploy)
-│   ├── seed.ts              Dados de exemplo (pnpm seed)
-│   ├── seed-photos/         Fotos livres do Wikimedia Commons usadas pelo seed
+│   ├── seed.ts              Cadastra os museus no banco (pnpm seed)
+│   ├── seed-museums.ts      Dados dos 67 museus (endereço, horário, fotos, créditos)
+│   ├── seed-photos/         Fotos usadas pelo seed e a capa padrão sem-foto.jpg
 │   └── payload.config.ts    Configuração do Payload (banco, coleções, uploads)
 ├── .env.example             Modelo das variáveis de ambiente
 └── next.config.ts           Configuração do Next.js
@@ -215,7 +216,7 @@ Em `/admin` a equipe gerencia o conteúdo. O painel está em português, mas os 
 O mapa ([src/components/aonde/MapExplorer.tsx](src/components/aonde/MapExplorer.tsx)) usa **Leaflet**:
 
 - **Mapa de fundo:** vem do **OpenStreetMap** e não precisa de chave de API. Um filtro em `styles.css` deixa as cores no tom do app, e no tema escuro o mapa fica escuro.
-- **Pinos:** usam a latitude e a longitude cadastradas no museu. Museus sem coordenadas aparecem na lista com "Localização não cadastrada".
+- **Pinos:** usam a latitude e a longitude cadastradas no museu. Museus sem coordenadas aparecem na lista com "Localização não cadastrada". Com o mapa afastado, os pinos viram pontos menores para o Centro não virar um bolo. Museus no mesmo prédio (como o MAC-PR dentro do MON) têm os pinos afastados alguns metros só no desenho, para dar para tocar em cada um com zoom.
 - **Lista:** fica num bloco abaixo do mapa. Tocar num pino mostra o cartão do museu logo abaixo do mapa; tocar num museu da lista volta ao mapa e centraliza o pino.
 - **"Perto de mim":** usa a localização do navegador, que pede permissão, e ordena os museus por distância.
 - **"Como chegar":** abre a rota no Google Maps por um link. Não usa API.
@@ -269,8 +270,10 @@ O código já está preparado. Para o primeiro deploy:
 
 ## Pendências e limitações conhecidas
 
-- **Origem das fotos:** as fotos do Museu Paranaense, do Museu do Holocausto e do Capão da Imbuia são do Wikimedia Commons, com licença livre e crédito exibido no app. Não há foto livre do interior do Museu do Holocausto; a capa mostra a entrada do prédio da Sinagoga Beit Yaacov, onde o museu fica. As fotos do MON vieram do modelo do Figma, sem autor ou licença conhecidos; antes de publicar de verdade, troque-as por fotos com licença conhecida.
-- **Dados de exemplo:** endereços, horários e preços dos museus do seed são aproximados. Confira antes de publicar. Acessibilidade só está marcada no MON (rampas), a única informação com fonte; preencha o resto com dados confirmados, por exemplo com o Guia de Acessibilidade da Prefeitura de Curitiba.
+- **Origem das fotos:** quase todas são do Wikimedia Commons, com licença livre e crédito exibido no app. Algumas mostram o prédio onde o museu funciona (por exemplo, o Colégio Estadual ou a Santa Casa). As fotos do Museu do Saneamento e do Espaço Energia são de divulgação (Sanepar e Copel, publicadas pela Agência Estadual de Notícias), com crédito. As do MON vieram do modelo do Figma, sem autor ou licença conhecidos.
+- **Museus sem foto:** 22 museus não têm foto livre e usam a capa padrão (`sem-foto.jpg`). Para trocar, envie uma foto no `/admin` (*Museums → museu → Cover*) com o crédito. Fotos tiradas pela equipe ou cedidas pelo museu são o caminho mais seguro; imagens achadas no Google costumam ter direitos autorais.
+- **Dados dos museus:** vêm da planilha da equipe (*Comunicação museus – Dados Museus*), com correções conferidas na web (endereços trocados, horários novos). Ficaram de fora: Casa João Turin, Museu do Futebol do Paraná, Museu do Som Independente e Museu do Cartaz (fechados; o acervo do Cartaz está na Casa da Memória); Museu da Lava-Jato (só virtual); Museu da Papiloscopia, Umbigo Casa de Cultura e Sala do Artista Popular (sem endereço ou funcionamento confirmados). As 3 linhas do Museu/Memorial Ucraniano viraram um só museu, e o Acervo Histórico do Sistema Penitenciário virou o Museu Penitenciário. Horários e preços mudam; confira antes de divulgar. Acessibilidade só está marcada no MON (rampas), a única informação com fonte; preencha o resto com dados confirmados, por exemplo com o Guia de Acessibilidade da Prefeitura de Curitiba.
+- **"Aberto agora":** o selo na tela do museu ainda não lê o horário cadastrado; ele considera todos abertos de terça a domingo, das 10h às 18h. Para ficar certo, os horários precisariam de um formato estruturado (dias e horas), não só texto.
 - **E-mail:** não há serviço de e-mail configurado. Recuperação de senha e código de verificação (`/reset`, `/verify`) ainda não funcionam; as telas avisam isso.
 - **Fotos da avaliação e foto de perfil:** ficam só no navegador da pessoa (pré-visualização e `localStorage`) e não são enviadas ao servidor.
 - **Payload beta:** o projeto usa o **Payload 4.0.0-beta.3**, herdado do Figma Make. Pode haver bugs e mudanças até a versão estável.
