@@ -296,6 +296,79 @@ function MuseumSlide({
     </div>
   )
 }
+
+// Instagram-style carousel for one museum's photos: edge to edge, the photos
+// follow the finger, and whatever is passed as children stays fixed on top.
+function PhotoCarousel({
+  photos,
+  alt,
+  index,
+  onIndexChange,
+  children,
+}: {
+  photos: string[]
+  alt: string
+  index: number
+  onIndexChange: (index: number) => void
+  children: ReactNode
+}) {
+  const reducedMotion = useReducedMotion()
+  const scroller = useRef<HTMLDivElement>(null)
+  const goTo = (target: number) => {
+    const row = scroller.current
+    row?.scrollTo({
+      left: target * row.clientWidth,
+      behavior: reducedMotion ? "instant" : "smooth",
+    })
+  }
+  const arrow =
+    "absolute top-[40%] z-20 -translate-y-1/2 border border-white/25 bg-black/25 text-white backdrop-blur-md hover:bg-black/40 pointer-coarse:hidden"
+  return (
+    <div className="relative aspect-square max-h-[52dvh] w-full overflow-hidden">
+      <div
+        ref={scroller}
+        role="region"
+        aria-roledescription="carrossel"
+        aria-label="Fotos do museu. Deslize para os lados para ver mais."
+        tabIndex={photos.length > 1 ? 0 : undefined}
+        onScroll={(event) => {
+          const row = event.currentTarget
+          const next = Math.round(row.scrollLeft / row.clientWidth)
+          if (next !== index) onIndexChange(next)
+        }}
+        className="hide-scroll flex h-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain focus-visible:-outline-offset-4"
+      >
+        {photos.map((src, position) => (
+          <MuseumPhoto
+            key={`${position}-${src}`}
+            src={src}
+            alt={alt}
+            className="h-full w-full shrink-0 snap-center snap-always"
+          />
+        ))}
+      </div>
+      {children}
+      {index > 0 && (
+        <IconButton
+          label="Foto anterior"
+          onClick={() => goTo(index - 1)}
+          className={`${arrow} left-2.5`}
+        >
+          <ArrowLeft size={18} />
+        </IconButton>
+      )}
+      {index < photos.length - 1 && (
+        <IconButton
+          label="Próxima foto"
+          onClick={() => goTo(index + 1)}
+          className={`${arrow} right-2.5`}
+        >
+          <ArrowRight size={18} />
+        </IconButton>
+      )}
+    </div>
+  )
+}
 function IconButton({
   children,
   label,
@@ -646,14 +719,11 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
       setMuseum(list[0])
     }
   }
-  const stepSlide = (step: number, details: boolean) => {
+  // Home carousel; the details photos scroll natively (PhotoCarousel).
+  const stepSlide = (step: number) => {
     setSlideDirection(step)
-    if (details)
-      setPhoto((previous) => (previous + step + photos.length) % photos.length)
-    else {
-      const position = Math.max(0, homeList.indexOf(museum))
-      setMuseum(homeList[(position + step + homeList.length) % homeList.length])
-    }
+    const position = Math.max(0, homeList.indexOf(museum))
+    setMuseum(homeList[(position + step + homeList.length) % homeList.length])
   }
   const toggleSaved = (index: number) => {
     const target = museums[index]
@@ -1257,121 +1327,165 @@ function Prototype({ initialMuseums }: { initialMuseums: AondeMuseum[] }) {
   )
   const Hero = ({ details = false }: { details?: boolean }) => {
     const slideCount = details ? photos.length : homeList.length
+    const position = details ? photo : homeList.indexOf(museum)
     const credit = details ? photoCredits[photo % photos.length] : current.imageCredit
+    const counter = slideCount > 1 && (
+      <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-black/25 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md">
+        {position + 1} de {slideCount}
+      </div>
+    )
+    const saveButton = (
+      <IconButton
+        label={
+          isSaved(museum)
+            ? "Remover da lista de desejos"
+            : "Adicionar à lista de desejos"
+        }
+        onClick={() => toggleSaved(museum)}
+        className="absolute right-3 top-3 z-20 border border-white/20 bg-black/25 text-white backdrop-blur-md"
+      >
+        <Bookmark
+          size={18}
+          fill={isSaved(museum) ? "currentColor" : "none"}
+        />
+      </IconButton>
+    )
+    const overlay = (
+      <>
+        <div className="mb-2.5 flex items-center gap-2 text-[.58em] font-semibold uppercase tracking-[.14em]">
+          <span className="rounded-full border border-white/30 bg-white/15 px-2.5 py-1 backdrop-blur-md">
+            {current.type}
+          </span>
+          <span className="flex min-w-0 items-center gap-1 truncate">
+            <MapPin size={12} className="shrink-0" />
+            {current.district}
+          </span>
+          <span className="ml-auto flex shrink-0 items-center gap-1.5">
+            {current.accessibility.length > 0 && (
+              <span
+                title="Possui recursos de acessibilidade"
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-black/30 backdrop-blur-md"
+              >
+                <Accessibility
+                  size={13}
+                  aria-label="Possui recursos de acessibilidade"
+                />
+              </span>
+            )}
+            <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 normal-case tracking-normal backdrop-blur-md">
+              {!details && homeTab === "visited" ? (
+                <>
+                  <Footprints size={11} />
+                  {current.visits}{" "}
+                  {current.visits === 1 ? "visita" : "visitas"}
+                </>
+              ) : (
+                <>
+                  <Star size={11} fill="currentColor" />
+                  {current.rating === null ? "Novo" : ratingText}
+                </>
+              )}
+            </span>
+          </span>
+        </div>
+        <motion.h1
+          key={current.name}
+          initial={{ opacity: 0, y: reducedMotion ? 0 : 7 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.2 }}
+          className="line-clamp-2 font-serif text-[1.35em] font-bold leading-[1.1] text-balance"
+        >
+          {current.name}
+        </motion.h1>
+      </>
+    )
+    const creditLine = credit && (
+      <p
+        className={`mt-1.5 text-right text-[.55em] leading-snug text-foreground/55 ${
+          details ? "px-5" : "px-3"
+        }`}
+      >
+        {credit.url ? (
+          <a
+            href={credit.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-foreground/25 underline-offset-2 hover:text-foreground/80"
+          >
+            {credit.text}
+          </a>
+        ) : (
+          credit.text
+        )}
+      </p>
+    )
+    if (details)
+      return (
+        <section className="relative isolate mb-5">
+          <PhotoCarousel
+            key={current.id}
+            photos={photos}
+            alt={photoAlt(current.name)}
+            index={photo}
+            onIndexChange={setPhoto}
+          >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/5 to-black/80" />
+            {counter}
+            {saveButton}
+            {/* The name stays put while the photos slide underneath. */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5 text-white">
+              {overlay}
+            </div>
+          </PhotoCarousel>
+          {photos.length > 1 && (
+            <div aria-hidden="true" className="mt-2.5 flex justify-center gap-1.5">
+              {photos.map((src, dot) => (
+                <span
+                  key={`${dot}-${src}`}
+                  className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                    dot === photo ? "bg-accent" : "bg-foreground/20"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+          {creditLine}
+        </section>
+      )
     return (
     <section className="relative isolate mx-4 my-5">
       <div className="relative flex items-center">
-        {slideCount > 1 && (
-          <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-black/25 px-2.5 py-1 text-[9px] font-semibold text-white backdrop-blur-md">
-            {details ? photo + 1 : homeList.indexOf(museum) + 1} de {slideCount}
-          </div>
-        )}
-        <IconButton
-          label={
-            isSaved(museum)
-              ? "Remover da lista de desejos"
-              : "Adicionar à lista de desejos"
-          }
-          onClick={() => toggleSaved(museum)}
-          className="absolute right-3 top-3 z-20 border border-white/20 bg-black/25 text-white backdrop-blur-md"
-        >
-          <Bookmark
-            size={18}
-            fill={isSaved(museum) ? "currentColor" : "none"}
-          />
-        </IconButton>
+        {counter}
+        {saveButton}
         {slideCount > 1 && (
           <IconButton
-            label={details ? "Foto anterior" : "Museu anterior"}
-            onClick={() => stepSlide(-1, details)}
+            label="Museu anterior"
+            onClick={() => stepSlide(-1)}
             className="absolute left-2.5 top-[40%] z-10 -translate-y-1/2 border border-white/25 bg-black/25 text-white backdrop-blur-md hover:bg-black/40"
           >
             <ArrowLeft size={18} />
           </IconButton>
         )}
         <MuseumSlide
-          slideId={`${museum}-${details ? photo : "museum"}`}
-          src={details ? photos[photo % photos.length] : current.image}
+          slideId={String(museum)}
+          src={current.image}
           alt={photoAlt(current.name)}
           direction={slideDirection}
-          onStep={(step) => stepSlide(step, details)}
-          onOpen={details ? undefined : () => openMuseum(museum)}
-          overlay={
-            <>
-              <div className="mb-2.5 flex items-center gap-2 text-[.58em] font-semibold uppercase tracking-[.14em]">
-                <span className="rounded-full border border-white/30 bg-white/15 px-2.5 py-1 backdrop-blur-md">
-                  {current.type}
-                </span>
-                <span className="flex min-w-0 items-center gap-1 truncate">
-                  <MapPin size={12} className="shrink-0" />
-                  {current.district}
-                </span>
-                <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                  {current.accessibility.length > 0 && (
-                    <span
-                      title="Possui recursos de acessibilidade"
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-black/30 backdrop-blur-md"
-                    >
-                      <Accessibility
-                        size={13}
-                        aria-label="Possui recursos de acessibilidade"
-                      />
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 normal-case tracking-normal backdrop-blur-md">
-                    {!details && homeTab === "visited" ? (
-                      <>
-                        <Footprints size={11} />
-                        {current.visits}{" "}
-                        {current.visits === 1 ? "visita" : "visitas"}
-                      </>
-                    ) : (
-                      <>
-                        <Star size={11} fill="currentColor" />
-                        {current.rating === null ? "Novo" : ratingText}
-                      </>
-                    )}
-                  </span>
-                </span>
-              </div>
-              <motion.h1
-                key={current.name}
-                initial={{ opacity: 0, y: reducedMotion ? 0 : 7 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reducedMotion ? 0 : 0.2 }}
-                className="line-clamp-2 font-serif text-[1.35em] font-bold leading-[1.1] text-balance"
-              >
-                {current.name}
-              </motion.h1>
-            </>
-          }
+          onStep={stepSlide}
+          onOpen={() => openMuseum(museum)}
+          overlay={overlay}
         />
         {slideCount > 1 && (
           <IconButton
-            label={details ? "Próxima foto" : "Próximo museu"}
-            onClick={() => stepSlide(1, details)}
+            label="Próximo museu"
+            onClick={() => stepSlide(1)}
             className="absolute right-2.5 top-[40%] z-10 -translate-y-1/2 border border-white/25 bg-black/25 text-white backdrop-blur-md hover:bg-black/40"
           >
             <ArrowRight size={18} />
           </IconButton>
         )}
       </div>
-      {credit && (
-        <p className="mt-1.5 px-3 text-right text-[.55em] leading-snug text-foreground/55">
-          {credit.url ? (
-            <a
-              href={credit.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-foreground/25 underline-offset-2 hover:text-foreground/80"
-            >
-              {credit.text}
-            </a>
-          ) : (
-            credit.text
-          )}
-        </p>
-      )}
+      {creditLine}
     </section>
     )
   }
